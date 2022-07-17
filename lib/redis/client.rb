@@ -631,6 +631,11 @@ class Redis
             end
           end
 
+          if ENV['REDIS_SENTINELS_HOST'].present?
+            reset_sentinels
+            return sentinel_detect
+          end
+
           raise CannotConnectError, "No sentinels available."
         end
 
@@ -660,6 +665,13 @@ class Redis
               end
             end
           end
+        end
+
+        private
+
+        def reset_sentinels
+          Rails.logger.info("Trying to resolve sentinels")
+          @sentinels = Resolv.getaddresses(ENV['REDIS_SENTINELS_HOST']).map{ |address| { host: address, port: 26379 } }
         end
       end
     end
